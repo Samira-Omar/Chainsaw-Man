@@ -1,37 +1,88 @@
-// Samira Edited
+// Fardowsa Edited
+
 using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    public int maxHealth = 125; // Maximum health of the enemy.
+    public int maxHealth = 100; // Maximum health of the enemy.
     private int currentHealth; // Current health of the enemy.
+    public GameObject deathEffect; // Optional: Particle effect for death.
+    public AudioClip deathSound; // Optional: Sound for death.
+    private AudioSource audioSource;
+    private Animator animator;
+    private bool isDead = false; // To prevent multiple death triggers.
 
-    // Called when the enemy is initialized.
     private void Start()
     {
-        currentHealth = maxHealth; // Set the initial health to the maximum health.
+        currentHealth = maxHealth; // Initialize health to the maximum value.
+        animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Function to apply damage to the enemy.
     public void TakeDamage(int damageAmount)
     {
-        // Reduce the current health by the damage amount.
-        currentHealth -= damageAmount;
+        if (isDead) return; // Prevent further damage if already dead.
 
-        // Check if the enemy's health has reached zero or below.
+        currentHealth -= damageAmount; // Reduce the health.
+
+        // Optionally trigger a "hit" animation if it exists.
+        animator?.SetTrigger("Hit");
+
         if (currentHealth <= 0)
         {
-            Die(); // Call the function to handle the enemy's death.
+            Die(); // Handle death when health is depleted.
         }
     }
 
     // Function to handle the enemy's death.
     private void Die()
     {
-        // Perform any death-related actions here, such as playing death animations, spawning effects, or removing the enemy from the scene.
-        // You can customize this method based on your game's requirements.
+        if (isDead) return; // Prevent multiple death triggers.
+        isDead = true;
 
-        // For example, you might destroy the enemy GameObject:
-        gameObject.GetComponent<Animator>().SetBool("Death", true);
+        // Play death animation if it exists.
+        if (animator != null)
+        {
+            animator.SetBool("Death", true);
+        }
+
+        // Play death sound if assigned.
+        if (deathSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(deathSound);
+        }
+
+        // Spawn death effect if assigned.
+        if (deathEffect != null)
+        {
+            Instantiate(deathEffect, transform.position, Quaternion.identity);
+        }
+
+        // Disable enemy's functionality (e.g., movement, attacks).
+        DisableEnemy();
+
+        // Destroy the enemy GameObject after a delay (e.g., after death animation).
+        Destroy(gameObject, 2f);
+    }
+
+    // Function to disable the enemy's functionality upon death.
+    private void DisableEnemy()
+    {
+        // Disable any movement scripts or nav mesh agents.
+        var navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+        if (navAgent != null)
+        {
+            navAgent.enabled = false;
+        }
+
+        // Disable collider to prevent interactions.
+        var collider = GetComponent<Collider>();
+        if (collider != null)
+        {
+            collider.enabled = false;
+        }
+
+        // Stop other components like attacking or AI behaviors (if applicable).
     }
 }
