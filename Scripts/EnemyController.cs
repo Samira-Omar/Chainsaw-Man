@@ -1,75 +1,165 @@
-// Samira Edited 
+// Fardowsa Edited
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using UnityEngine.AI;
 
-public class MainMenuLogic : MonoBehaviour
+public class EnemyController : MonoBehaviour
 {
-    private Canvas mainMenuCanvas;
-    private Canvas optionsMenuCanvas;
-    private Canvas extrasMenuCanvas;
-    private Canvas loadingCanvas;
+    public Transform[] waypoints;
+    public float idleTime = 2f;
+    public float walkSpeed = 2f; // Walking speed.
+    public float chaseSpeed = 4f; // Chasing speed.
+    public float sightDistance = 10f;
+    public float fieldOfView = 45f; // Field of view angle for detection.
+    public AudioClip idleSound;
+    public AudioClip walkingSound;
+    public AudioClip chasingSound;
 
-    public AudioSource buttonSound;
+    private int currentWaypointIndex = 0;
+    private NavMeshAgent agent;
+    private Animator animator;
+    private float idleTimer = 0f;
+    private Transform player;
+    private AudioSource audioSource;
 
-    void Start() 
+    private enum EnemyState { Idle, Walk, Chase }
+    private EnemyState currentState = EnemyState.Idle;
+
+    private void Start()
     {
-        mainMenuCanvas = GameObject.Find("MainMenuCanvas")?.GetComponent<Canvas>();
-        optionsMenuCanvas = GameObject.Find("OptionsCanvas")?.GetComponent<Canvas>();
-        extrasMenuCanvas = GameObject.Find("ExtrasCanvas")?.GetComponent<Canvas>();
-        loadingCanvas = GameObject.Find("LoadingCanvas")?.GetComponent<Canvas>();
+        agent = GetComponent<NavMeshAgent>();
+        animator = GetComponent<Animator>();
+        player = GameObject.FindGameObjectWithTag("Player").transform;
+        audioSource = GetComponent<AudioSource>();
 
-        if (mainMenuCanvas == null || optionsMenuCanvas == null || extrasMenuCanvas == null || loadingCanvas == null)
+        if (waypoints.Length == 0)
         {
-            Debug.LogError("Missing canvas references. Ensure all menus are correctly named.");
+            Debug.LogError("Waypoints not assigned to EnemyController.");
             return;
         }
 
-        mainMenuCanvas.enabled = true;
-        optionsMenuCanvas.enabled = false;
-        extrasMenuCanvas.enabled = false;
-        loadingCanvas.enabled = false;
+        SetDestinationToWaypoint();
+        StartCoroutine(PlayerDetectionCoroutine());
     }
 
-    public void OnStartGame()
+    private void Update()
     {
-        if (buttonSound) buttonSound.Play();
+        switch (currentState)
+        {
+            case EnemyState.Idle:
+                HandleIdleState();
+                break;
 
-        loadingCanvas.enabled = true;
-        mainMenuCanvas.enabled = false;
+            case EnemyState.Walk:
+                HandleWalkState();
+                break;
 
-        SceneManager.LoadScene("SampleScene");
+            case EnemyState.Chase:
+                HandleChaseState();
+                break;
+        }
     }
 
-    public void ShowOptionsMenu()
+    private void HandleIdleState()
     {
-        if (buttonSound) buttonSound.Play();
+        idleTimer += Time.deltaTime;
+        animator.SetBool("IsWalking", false);
+        animator.SetBool("IsChasing", false);
+        PlaySound(idleSound);
 
-        mainMenuCanvas.enabled = false;
-        optionsMenuCanvas.enabled = true;
+        if (idleTimer >= idleTime)
+        {
+            NextWaypoint();
+        }
     }
 
-    public void ShowExtrasMenu()
+    private void HandleWalkState()
     {
-        if (buttonSound) buttonSound.Play();
+        idleTimer = 0f;
+        animator.SetBool("IsWalking", true);
+        animator.SetBool("IsChasing", false);
+        PlaySound(walkingSound);
 
-        mainMenuCanvas.enabled = false;
-        extrasMenuCanvas.enabled = true;
+        if (agent.remainingDistance <= agent.stoppingDistance)
+        {
+            currentState = EnemyState.Idle;
+        }
     }
 
-    public void QuitGame()
+    private void HandleChaseState()
     {
-        if (buttonSound) buttonSound.Play();
+        agent.speed = chaseSpeed;
+        agent.SetDestination(player.position);
+        animator.SetBool("IsWalking", false);
+        animator.SetBool("IsChasing", true);
+        PlaySound(chasingSound);
 
-        Debug.Log("Game Exited");
-        Application.Quit();
+        if (Vector3.Distance(transform.position, player.position) > sightDistance)
+        {
+            currentState = EnemyState.Walk;
+            agent.speed = walkSpeed;
+        }
     }
 
-    public void GoBackToMainMenu()
+    private IEnumerator PlayerDetectionCoroutine()
     {
-        if (buttonSound) buttonSound.Play();
+        while (true)
+        {
+            CheckForPlayerDetection();
+            yield return new WaitForSeconds(0.2f); // Check for detection 5 times per second.
+        }
+    }
 
-        mainMenuCanvas.enabled = true;
-        optionsMenuCanvas.enabled = false;
-        extrasMenuCanvas.enabled = false;
+    private void CheckForPlayerDetection()
+    {
+        Vector3 playerDirection = player.position - transform.position;
+        float angleToPlayer = Vector3.Angle(transform.forward, playerDirection);
+
+        if (angleToPlayer < fieldOfView)
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, playerDirection.normalized, out hit, sightDistance))
+            {
+                if (hit.collider.CompareTag("Player"))
+                {
+                    currentState = EnemyState.Chase;
+                    Debug.Log("Player detected!");
+                }
+            }
+        }
+    }
+
+    private void NextWaypoint()
+    {
+        currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
+        SetDestinationToWaypoint();
+    }
+
+    private void SetDestinationToWaypoint()
+    {
+        if (waypoints.Length > 0)
+        {
+            agent.SetDestination(waypoints[currentWaypointIndex].position);
+            currentState = EnemyState.Walk;
+            agent.speed = walkSpeed;
+        }
+    }
+
+    private void PlaySound(AudioClip soundClip)
+    {
+        if (!audioSource.isPlaying || audioSource.clip != soundClip)
+        {
+            audioSource.clip = soundClip;
+            audioSource.Play();
+        }
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (player != null)
+        {
+            Gizmos.color = currentState == EnemyState.Chase ? Color.red : Color.green;
+            Gizmos.DrawLine(transform.position, player.position);
+        }
     }
 }
+
