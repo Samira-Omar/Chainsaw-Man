@@ -1,31 +1,37 @@
-﻿using UnityEngine;
+// Samira Edited
+
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class KillPlayer : MonoBehaviour
 {
-    public string nextSceneName; // Name of the next scene to load
-    public float delay = 0.5f; // Delay in seconds before loading the next scene
-    public GameObject fadeout;
+    [Header("Scene Transition Settings")]
+    public string nextSceneName; // The name of the next scene to load.
+    public float delay = 0.5f; // Delay in seconds before loading the next scene.
 
-    private bool playerInsideTrigger = false;
+    [Header("UI Settings")]
+    public GameObject fadeout; // Fadeout UI element.
+
+    private bool isPlayerInsideTrigger = false; // Track if the player is inside the trigger area.
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            playerInsideTrigger = true;
-            fadeout.SetActive(true);
-            Invoke("LoadNextScene", delay);
+            isPlayerInsideTrigger = true; // Mark that the player is in the trigger zone.
+            if (fadeout != null)
+            {
+                fadeout.SetActive(true); // Activate the fadeout UI if assigned.
+            }
+            Invoke(nameof(LoadNextScene), delay); // Schedule the scene load after the delay.
         }
     }
 
-
     private void LoadNextScene()
     {
-        if (playerInsideTrigger)
+        if (isPlayerInsideTrigger)
         {
-            // Load the next scene by name
-            SceneManager.LoadScene(nextSceneName);
+            SceneManager.LoadScene(nextSceneName); // Load the specified scene.
         }
     }
 }
