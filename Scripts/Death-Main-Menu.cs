@@ -1,17 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+// Sofiya Edited
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
-public class MainMenu : MonoBehaviour
+// I wrote this part of the code to end the game
+public class MenuController : MonoBehaviour
 {
-    public void B_LoadScene()
+    // Method to load the game scene
+    public void LoadGameScene()
     {
         SceneManager.LoadScene("Game");
     }
 
-
-    public void B_QuitGame()
+    // Method to exit the application
+    public void ExitGame()
     {
         Application.Quit();
     }
