@@ -22,9 +22,9 @@ public class EnemyDamage : MonoBehaviour
         audioSource = player.GetComponent<AudioSource>(); // Reference the player's audio source.
     }
 
-    /// <summary>
+
     /// Triggered when an object enters the enemy's collider.
-    /// </summary>
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player")) // Only process damage if the player is hit.
@@ -43,9 +43,9 @@ public class EnemyDamage : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Plays a random damage sound when the player takes damage.
-    /// </summary>
+
     private void PlayRandomDamageSound()
     {
         if (damageSounds.Length > 0) // Ensure there are sounds to play.
