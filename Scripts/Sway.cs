@@ -1,28 +1,38 @@
-﻿using System.Collections;
+// Winta Edited
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Sway : MonoBehaviour
 {
-    public float swayAmount = 0.5f;      // The amount of sway to apply to the pistol
-    public float smoothFactor = 2f;      // The smooth factor for the sway movement
+    public float swayAmount;          // How much the object sways in response to mouse movement
+    public float swayMax;            // The maximum amount the object can sway
+    public float swaySmoothSpeed;    // Speed at which swaying returns to normal
 
-    private Quaternion initialRotation;  // The initial rotation of the pistol
-    private Transform playerCamera;      // Reference to the player's camera
+    private Vector3 originalPosition;
 
     void Start()
     {
-        playerCamera = Camera.main.transform;
-        initialRotation = transform.localRotation;
+        // Save the object's initial local position
+        originalPosition = transform.localPosition;
     }
 
     void Update()
     {
-        float inputX = -Input.GetAxis("Mouse X") * swayAmount;
-        float inputY = -Input.GetAxis("Mouse Y") * swayAmount;
+        // Capture mouse movement and calculate the sway amount
+        float swayInputX = -Input.GetAxis("Mouse X") * swayAmount;
+        float swayInputY = -Input.GetAxis("Mouse Y") * swayAmount;
 
-        Quaternion targetRotation = Quaternion.Euler(inputY, inputX, 0f) * initialRotation;
-        transform.localRotation = Quaternion.Slerp(transform.localRotation, targetRotation, Time.deltaTime * smoothFactor);
+        // Clamp the calculated sway values to stay within the defined max range
+        swayInputX = Mathf.Clamp(swayInputX, -swayMax, swayMax);
+        swayInputY = Mathf.Clamp(swayInputY, -swayMax, swayMax);
+
+        // Set the target position by combining the sway input with the original position
+        Vector3 targetSwayPosition = new Vector3(swayInputX, swayInputY, 0) + originalPosition;
+
+        // Smoothly interpolate the object's position towards the desired target position
+        transform.localPosition = Vector3.Lerp(transform.localPosition, targetSwayPosition, Time.deltaTime * swaySmoothSpeed);
     }
 }
 
