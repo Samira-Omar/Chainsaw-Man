@@ -34,7 +34,7 @@ Here is what each script can do:
 -Player Controller: Controls the players movement, look, and sounds.
 
 -Sway: Moves objects that the player is holding, makes them move 
-       left, right, up, down, without aditional animations.
+       left, right, up, down, without additional animations.
 
 -Pistol: A basic pistol script (can be adapted for other weapons
 	 as well) handles, shooting, reloading, animations, etc.
