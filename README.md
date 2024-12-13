@@ -1,6 +1,6 @@
 Game Title: Escape the Chainsaw Man
 
-Greetings from Chainsaw Chase: Get Out of the Maze! In this thrilling and challenging maze exploration game,
+Get Out of the Maze! In this thrilling and challenging maze exploration game,
 your goals are to find items, escape the maze, and survive. The Chainsaw Man is after you, and the maze is perilous.
 Before it's too late, you'll need to think fast, stay on your feet, and find out how to get out.
 
