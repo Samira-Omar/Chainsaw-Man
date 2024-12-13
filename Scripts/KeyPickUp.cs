@@ -1,57 +1,52 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+// Fadumo Edited 
+
 using UnityEngine;
 
-public class KeyPickUp : MonoBehaviour
+public class KeyPickupHandler : MonoBehaviour
 {
-    public GameObject handUI;
-    public GameObject objToActivate;
+    public GameObject interactionPrompt; // UI to indicate the player can pick up the key
+    public GameObject keyInventorySlot; // Object representing the key in the player's inventory
 
-    private GameObject ob;
-
-
-    private bool inReach;
-
+    private GameObject keyObject; // Reference to the key object
+    private bool isWithinRange = false; // Tracks if the player is close enough to interact
 
     void Start()
     {
-        handUI.SetActive(false);
+        // Disable UI and inventory slot display initially
+        interactionPrompt.SetActive(false);
+        keyInventorySlot.SetActive(false);
 
-        objToActivate.SetActive(false);
-
-        ob = this.gameObject;
-
+        // Assign the key object
+        keyObject = this.gameObject;
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Reach")
+        if (other.CompareTag("Reach"))
         {
-            inReach = true;
-            handUI.SetActive(true);
+            isWithinRange = true;
+            interactionPrompt.SetActive(true); // Show prompt when player is nearby
         }
-
     }
 
     void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Reach")
+        if (other.CompareTag("Reach"))
         {
-            inReach = false;
-            handUI.SetActive(false);
+            isWithinRange = false;
+            interactionPrompt.SetActive(false); // Hide prompt when player moves away
         }
     }
 
     void Update()
     {
-
-
-        if (inReach && Input.GetButtonDown("Interact"))
+        // Handle key pickup interaction
+        if (isWithinRange && Input.GetButtonDown("Interact"))
         {
-            handUI.SetActive(false);
-            objToActivate.SetActive(true);
-            ob.GetComponent<MeshRenderer>().enabled = false;
+            interactionPrompt.SetActive(false); // Hide the interaction prompt
+            keyInventorySlot.SetActive(true); // Display the key in the inventory
+            keyObject.GetComponent<MeshRenderer>().enabled = false; // Hide the key object
         }
     }
-
 }
+
