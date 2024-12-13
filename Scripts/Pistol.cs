@@ -1,200 +1,148 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+// I wrote this part of the code and modified the values -- Sofiya
+
 using UnityEngine;
-
-public class Pistol : MonoBehaviour
+public class Handgun : MonoBehaviour
 {
-    public int maxAmmoInMag = 10;       // Maximum ammo capacity in the magazine
-    public int maxAmmoInStorage = 30;   // Maximum ammo capacity in the storage
-    public float shootCooldown = 0.5f;  // Cooldown time between shots
-    public float reloadCooldown = 0.5f;  // Cooldown time between shots
-    private float switchCooldown = 0.5f;  // Cooldown time between shots
-    public float shootRange = 100f;     // Range of the raycast
+    [Header("Ammo Settings")]
+    public int magCapacity = 10;       // Max bullets in a single magazine
+    public int reserveCapacity = 30;  // Max bullets in reserve
+    public float fireCooldown = 0.5f; // Time between shots
+    public float reloadTime = 0.5f;   // Time taken to reload
+    private float actionCooldown = 0.5f; // Cooldown between switching actions
+    public float maxRange = 100f;     // Effective shooting range
 
-    public ParticleSystem impactEffect; // Particle effect for impact
+    [Header("Effects")]
+    public ParticleSystem hitEffect;   // Effect displayed on bullet impact
+    public ParticleSystem muzzleEffect;
+    public GameObject muzzleLight;
 
-    public int currentAmmoInMag;       // Current ammo in the magazine
-    public int currentAmmoInStorage;   // Current ammo in the storage
-    public int damager;   // Current ammo in the storage
-    public bool canShoot = true;       // Flag to check if shooting is allowed
-    public bool canSwitch = true;       // Flag to check if shooting is allowed
-    private bool isReloading = false;   // Flag to check if reloading is in progress
-    private float shootTimer;           // Timer for shoot cooldown
+    [Header("Cartridge Settings")]
+    public Transform ejectionPoint;   // Where the cartridge is ejected
+    public GameObject cartridgePrefab;
+    public float ejectionForce = 5f;
 
-    public Transform cartridgeEjectionPoint; // Ejection point of the cartridge
-    public GameObject cartridgePrefab; // Prefab of the cartridge
-    public float cartridgeEjectionForce = 5f; // Force applied to the cartridge
+    [Header("Gun Stats")]
+    public Animator gunAnimator;
+    public AudioSource fireSound;
+    public int damage = 10;  // Damage dealt per shot
+    public bool isReadyToShoot = true;
+    private bool isReloading = false;
 
-
-
-    public Animator gun;
-    public ParticleSystem muzzleFlash;
-    public GameObject muzzleFlashLight;
-    public AudioSource shoot;
+    private int bulletsInMag;
+    private int bulletsInReserve;
+    private float fireCooldownTimer;
 
     void Start()
     {
-        currentAmmoInMag = maxAmmoInMag;
-        currentAmmoInStorage = maxAmmoInStorage;
-        canSwitch = true;
-        muzzleFlashLight.SetActive(false);
+        bulletsInMag = magCapacity;
+        bulletsInReserve = reserveCapacity;
+        isReadyToShoot = true;
+        muzzleLight.SetActive(false);
     }
 
     void Update()
     {
+        // Ammo management
+        bulletsInMag = Mathf.Clamp(bulletsInMag, 0, magCapacity);
+        bulletsInReserve = Mathf.Clamp(bulletsInReserve, 0, reserveCapacity);
 
-        // Update current ammo counts
-        currentAmmoInMag = Mathf.Clamp(currentAmmoInMag, 0, maxAmmoInMag);
-        currentAmmoInStorage = Mathf.Clamp(currentAmmoInStorage, 0, maxAmmoInStorage);
-
-        // Check for shoot input
-        if (Input.GetButtonDown("Fire1") && canShoot && !isReloading)
+        // Shooting input
+        if (Input.GetButtonDown("Fire1") && isReadyToShoot && !isReloading)
         {
-            switchCooldown = shootCooldown;
-            Shoot();
+            actionCooldown = fireCooldown;
+            Fire();
         }
 
-        // Check for reload input
+        // Reload input
         if (Input.GetKeyDown(KeyCode.R))
         {
-            switchCooldown = reloadCooldown;
-            Reload();
+            actionCooldown = reloadTime;
+            ReloadWeapon();
         }
 
-        // Update the shoot timer
-        if (shootTimer > 0f)
+        // Update cooldown timer
+        if (fireCooldownTimer > 0)
         {
-            shootTimer -= Time.deltaTime;
+            fireCooldownTimer -= Time.deltaTime;
         }
     }
-
-    void Shoot()
+// I added the fire method for the bullets
+    void Fire()
     {
-        // Check if there is ammo in the magazine
-        if (currentAmmoInMag > 0 && shootTimer <= 0f)
+        if (bulletsInMag > 0 && fireCooldownTimer <= 0)
         {
-            canSwitch = false;
-            shoot.Play();
-            muzzleFlash.Play();
-            muzzleFlashLight.SetActive(true);
-            gun.SetBool("shoot", true);
+            isReadyToShoot = false;
+            fireSound.Play();
+            muzzleEffect.Play();
+            muzzleLight.SetActive(true);
+            gunAnimator.SetBool("shoot", true);
 
-            // Perform the shoot action
+            // Handle shooting logic
             RaycastHit hit;
-            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, shootRange))
+            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, maxRange))
             {
-                // Check if the hit object has the "enemy" tag
                 if (hit.collider.CompareTag("Enemy"))
                 {
-                    // Get the EnemyHealth component from the hit object
-                    EnemyHealth enemyHealth = hit.collider.GetComponent<EnemyHealth>();
-
-                    // Check if the enemy has the EnemyHealth component
-                    if (enemyHealth != null)
-                    {
-                        // Apply damage to the enemy
-                        enemyHealth.TakeDamage(damager); // Replace 'damager' with the actual damage value.
-                    }
+                    var enemyHealth = hit.collider.GetComponent<EnemyHealth>();
+                    enemyHealth?.TakeDamage(damage);
                 }
-
-                // Instantiate impact effect at the hit point
-                Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
+                Instantiate(hitEffect, hit.point, Quaternion.LookRotation(hit.normal));
             }
 
-            // Instantiate the empty cartridge
-            GameObject cartridge = Instantiate(cartridgePrefab, cartridgeEjectionPoint.position, cartridgeEjectionPoint.rotation);
-            Rigidbody cartridgeRigidbody = cartridge.GetComponent<Rigidbody>();
+            // Eject cartridge
+            GameObject cartridge = Instantiate(cartridgePrefab, ejectionPoint.position, ejectionPoint.rotation);
+            cartridge.GetComponent<Rigidbody>().AddForce(ejectionPoint.right * ejectionForce, ForceMode.Impulse);
 
-            // Apply force to eject the cartridge
-            cartridgeRigidbody.AddForce(cartridgeEjectionPoint.right * cartridgeEjectionForce, ForceMode.Impulse);
+            StartCoroutine(ResetEffects());
+            StartCoroutine(AllowAction());
 
-            StartCoroutine(endAnimations());
-            StartCoroutine(endLight());
-            StartCoroutine(canswitchshoot());
-
-            switchCooldown -= Time.deltaTime;
-
-            // Reduce ammo count
-            currentAmmoInMag--;
-
-            // Start the shoot cooldown
-            shootTimer = shootCooldown;
+            bulletsInMag--;
+            fireCooldownTimer = fireCooldown;
         }
         else
         {
-            // Out of ammo in the magazine or shoot on cooldown
-            Debug.Log("Cannot shoot");
+            Debug.Log("Out of ammo!");
         }
     }
-
-    void Reload()
+// I wrote this part of the code
+    void ReloadWeapon()
     {
-        switchCooldown -= Time.deltaTime;
-        // Check if already reloading or out of ammo in the storage
-        if (isReloading || currentAmmoInStorage <= 0)
+        if (isReloading || bulletsInReserve <= 0)
             return;
 
-        // Calculate the number of bullets to reload
-        int bulletsToReload = maxAmmoInMag - currentAmmoInMag;
+        int bulletsNeeded = magCapacity - bulletsInMag;
+        int bulletsReloaded = Mathf.Min(bulletsNeeded, bulletsInReserve);
 
-        // Check if there is enough ammo in the storage for reloading
-        if (bulletsToReload > 0)
-        {
+        bulletsInMag += bulletsReloaded;
+        bulletsInReserve -= bulletsReloaded;
 
-            gun.SetBool("reload", true);
-            StartCoroutine(endAnimations());
-
-
-            // Determine the actual number of bullets to reload based on available ammo
-            int bulletsAvailable = Mathf.Min(bulletsToReload, currentAmmoInStorage);
-
-            // Update ammo counts
-            currentAmmoInMag += bulletsAvailable;
-            currentAmmoInStorage -= bulletsAvailable;
-
-            Debug.Log("Reloaded " + bulletsAvailable + " bullets");
-
-            // Start the reload cooldown
-            StartCoroutine(ReloadCooldown());
-        }
-        else
-        {
-            Debug.Log("Cannot reload");
-        }
+        gunAnimator.SetBool("reload", true);
+        StartCoroutine(ResetEffects());
+        StartCoroutine(ReloadCooldown());
     }
 
     IEnumerator ReloadCooldown()
     {
         isReloading = true;
-        canShoot = false;
-        canSwitch = false;
+        isReadyToShoot = false;
 
-        yield return new WaitForSeconds(reloadCooldown);
+        yield return new WaitForSeconds(reloadTime);
 
         isReloading = false;
-        canShoot = true;
-        canSwitch = true;
+        isReadyToShoot = true;
     }
 
-    IEnumerator endAnimations()
+    IEnumerator ResetEffects()
     {
-        yield return new WaitForSeconds(.1f);
-        gun.SetBool("shoot", false);
-        gun.SetBool("reload", false);
-
-
+        yield return new WaitForSeconds(0.1f);
+        gunAnimator.SetBool("shoot", false);
+        gunAnimator.SetBool("reload", false);
+        muzzleLight.SetActive(false);
     }
 
-    IEnumerator endLight()
+    IEnumerator AllowAction()
     {
-        yield return new WaitForSeconds(.1f);
-        muzzleFlashLight.SetActive(false);
+        yield return new WaitForSeconds(fireCooldown);
+        isReadyToShoot = true;
     }
-
-    IEnumerator canswitchshoot()
-    {
-        yield return new WaitForSeconds(shootCooldown);
-        canSwitch = true;
-    }
-
 }
