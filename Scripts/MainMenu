@@ -1,58 +1,76 @@
-// Fadumo Edited
+// Edited By Samira
+
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-public class LanternPickup : MonoBehaviour
+public class MainMenuLogic : MonoBehaviour
 {
-    private GameObject currentItem;
-    public GameObject handInteractionUI;
-    public GameObject lanternObject;
+    private Canvas mainMenuCanvas;
+    private Canvas optionsMenuCanvas;
+    private Canvas extrasMenuCanvas;
+    private Canvas loadingCanvas;
 
-    private bool isPlayerNearby;
+    public AudioSource buttonSound;
 
     void Start()
     {
-        currentItem = gameObject;
+        mainMenuCanvas = GameObject.Find("MainMenuCanvas")?.GetComponent<Canvas>();
+        optionsMenuCanvas = GameObject.Find("OptionsCanvas")?.GetComponent<Canvas>();
+        extrasMenuCanvas = GameObject.Find("ExtrasCanvas")?.GetComponent<Canvas>();
+        loadingCanvas = GameObject.Find("LoadingCanvas")?.GetComponent<Canvas>();
 
-        handInteractionUI.SetActive(false);
-        lanternObject.SetActive(false);
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Reach"))
+        if (mainMenuCanvas == null || optionsMenuCanvas == null || extrasMenuCanvas == null || loadingCanvas == null)
         {
-            isPlayerNearby = true;
-            handInteractionUI.SetActive(true);
+            Debug.LogError("Missing canvas references. Ensure all menus are correctly named.");
+            return;
         }
+
+        mainMenuCanvas.enabled = true;
+        optionsMenuCanvas.enabled = false;
+        extrasMenuCanvas.enabled = false;
+        loadingCanvas.enabled = false;
     }
 
-    private void OnTriggerExit(Collider other)
+    public void OnStartGame()
     {
-        if (other.CompareTag("Reach"))
-        {
-            isPlayerNearby = false;
-            handInteractionUI.SetActive(false);
-        }
+        if (buttonSound) buttonSound.Play();
+
+        loadingCanvas.enabled = true;
+        mainMenuCanvas.enabled = false;
+
+        SceneManager.LoadScene("SampleScene");
     }
 
-    void Update()
+    public void ShowOptionsMenu()
     {
-        if (isPlayerNearby && Input.GetButtonDown("Interact"))
-        {
-            HandleLanternPickup();
-        }
+        if (buttonSound) buttonSound.Play();
+
+        mainMenuCanvas.enabled = false;
+        optionsMenuCanvas.enabled = true;
     }
 
-    private void HandleLanternPickup()
+    public void ShowExtrasMenu()
     {
-        handInteractionUI.SetActive(false);
-        lanternObject.SetActive(true);
-        StartCoroutine(RemoveItemAfterDelay());
+        if (buttonSound) buttonSound.Play();
+
+        mainMenuCanvas.enabled = false;
+        extrasMenuCanvas.enabled = true;
     }
 
-    private IEnumerator RemoveItemAfterDelay()
+    public void QuitGame()
     {
-        yield return new WaitForSeconds(0.01f);
-        Destroy(currentItem);
+        if (buttonSound) buttonSound.Play();
+
+        Debug.Log("Game Exited");
+        Application.Quit();
     }
-} 
+
+    public void GoBackToMainMenu()
+    {
+        if (buttonSound) buttonSound.Play();
+
+        mainMenuCanvas.enabled = true;
+        optionsMenuCanvas.enabled = false;
+        extrasMenuCanvas.enabled = false;
+    }
+}
