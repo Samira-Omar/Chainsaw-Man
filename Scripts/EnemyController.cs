@@ -1,4 +1,4 @@
-
+// Samira Edited 
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,7 +11,7 @@ public class MainMenuLogic : MonoBehaviour
 
     public AudioSource buttonSound;
 
-    void Start()
+    void Start() 
     {
         mainMenuCanvas = GameObject.Find("MainMenuCanvas")?.GetComponent<Canvas>();
         optionsMenuCanvas = GameObject.Find("OptionsCanvas")?.GetComponent<Canvas>();
