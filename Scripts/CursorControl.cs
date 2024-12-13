@@ -1,10 +1,11 @@
-﻿using UnityEngine;
+// Edited by Sofiya
+using UnityEngine;
 
-public class CursorControl : MonoBehaviour
+public class CursorManager : MonoBehaviour
 {
-    private void Start()
+    private void Awake()
     {
-        // Make the cursor visible and unlock it
+        // Ensure the cursor is visible and not restricted
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
