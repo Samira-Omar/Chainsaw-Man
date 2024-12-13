@@ -1,13 +1,12 @@
 // Samira Edited
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class KillPlayer : MonoBehaviour
 {
     [Header("Scene Transition Settings")]
-    public string nextSceneName; // The name of the next scene to load.
-    public float delay = 0.5f; // Delay in seconds before loading the next scene.
+    public string nextSceneName; 
+    public float delay = 0.5f; 
 
     [Header("UI Settings")]
     public GameObject fadeout; // Fadeout UI element.
@@ -35,3 +34,5 @@ public class KillPlayer : MonoBehaviour
         }
     }
 }
+
+
