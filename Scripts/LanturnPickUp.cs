@@ -1,61 +1,60 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+// Winta Edited
+
 using UnityEngine;
+using System.Collections;
 
-public class LanturnPickUp : MonoBehaviour
+public class LanternPickup : MonoBehaviour
 {
-    private GameObject OB;
-    public GameObject handUI;
-    public GameObject lanturn;
+    private GameObject heldItem;
+    public GameObject interactionUI;
+    public GameObject lanternPrefab;
 
-
-    private bool inReach;
-
+    private bool playerIsNearby;
 
     void Start()
     {
-        OB = this.gameObject;
+        heldItem = gameObject;
 
-        handUI.SetActive(false);
-
-        lanturn.SetActive(false);
-
+        interactionUI.SetActive(false);
+        lanternPrefab.SetActive(false);
     }
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider collider)
     {
-        if (other.gameObject.tag == "Reach")
+        if (collider.CompareTag("Reach"))
         {
-            inReach = true;
-            handUI.SetActive(true);
+            playerIsNearby = true;
+            interactionUI.SetActive(true);
         }
-
     }
 
-    void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider collider)
     {
-        if (other.gameObject.tag == "Reach")
+        if (collider.CompareTag("Reach"))
         {
-            inReach = false;
-            handUI.SetActive(false);
+            playerIsNearby = false;
+            interactionUI.SetActive(false);
         }
     }
 
     void Update()
     {
-
-
-        if (inReach && Input.GetButtonDown("Interact"))
+        if (playerIsNearby && Input.GetButtonDown("Interact"))
         {
-            handUI.SetActive(false);
-            lanturn.SetActive(true);
-            StartCoroutine(end());
+            PickupLantern();
         }
     }
 
-    IEnumerator end()
+    private void PickupLantern()
     {
-        yield return new WaitForSeconds(.01f);
-        Destroy(OB);
+        interactionUI.SetActive(false);
+        lanternPrefab.SetActive(true);
+        StartCoroutine(DestroyItemAfterDelay());
+    }
+
+    private IEnumerator DestroyItemAfterDelay()
+    {
+        yield return new WaitForSeconds(0.01f);
+        Destroy(heldItem);
     }
 }
