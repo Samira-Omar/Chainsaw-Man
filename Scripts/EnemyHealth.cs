@@ -1,88 +1,63 @@
 // Fardowsa Edited
-
 using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
     public int maxHealth = 100; // Maximum health of the enemy.
-    private int currentHealth; // Current health of the enemy.
-    public GameObject deathEffect; // Optional: Particle effect for death.
-    public AudioClip deathSound; // Optional: Sound for death.
-    private AudioSource audioSource;
-    private Animator animator;
-    private bool isDead = false; // To prevent multiple death triggers.
+    private int currentHealth; // Current health value of the enemy.
+    public GameObject deathEffect; // Optional: Particle effect when the enemy dies.
+    public AudioClip deathSound; // Optional: Death sound effect.
+    private AudioSource audioSource; // For playing death sounds.
+    private Animator animator; // For death animations.
+    private bool isDead = false; // Track if the enemy is already dead to prevent repeated death logic.
 
     private void Start()
     {
-        currentHealth = maxHealth; // Initialize health to the maximum value.
+        currentHealth = maxHealth; // Set initial health to maximum at the start.
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
     }
 
-    // Function to apply damage to the enemy.
+    /// <summary>
+    /// Applies damage to the enemy and triggers death if health reaches 0.
+    /// </summary>
     public void TakeDamage(int damageAmount)
     {
-        if (isDead) return; // Prevent further damage if already dead.
+        if (isDead) return; // Ignore damage if already dead.
 
-        currentHealth -= damageAmount; // Reduce the health.
+        currentHealth -= damageAmount; // Reduce health by the damage amount.
 
-        // Optionally trigger a "hit" animation if it exists.
-        animator?.SetTrigger("Hit");
+        animator?.SetTrigger("Hit"); // Trigger a hit animation if available.
 
-        if (currentHealth <= 0)
-        {
-            Die(); // Handle death when health is depleted.
-        }
+        if (currentHealth <= 0) Die(); // If health drops to or below 0, handle death.
     }
 
-    // Function to handle the enemy's death.
+    /// <summary>
+    /// Handles enemy death effects, animations, and cleanup.
+    /// </summary>
     private void Die()
     {
-        if (isDead) return; // Prevent multiple death triggers.
+        if (isDead) return;
         isDead = true;
 
-        // Play death animation if it exists.
-        if (animator != null)
-        {
-            animator.SetBool("Death", true);
-        }
+        animator?.SetBool("Death", true);
+        if (deathSound) audioSource.PlayOneShot(deathSound);
+        if (deathEffect) Instantiate(deathEffect, transform.position, Quaternion.identity);
 
-        // Play death sound if assigned.
-        if (deathSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(deathSound);
-        }
-
-        // Spawn death effect if assigned.
-        if (deathEffect != null)
-        {
-            Instantiate(deathEffect, transform.position, Quaternion.identity);
-        }
-
-        // Disable enemy's functionality (e.g., movement, attacks).
         DisableEnemy();
-
-        // Destroy the enemy GameObject after a delay (e.g., after death animation).
         Destroy(gameObject, 2f);
     }
 
-    // Function to disable the enemy's functionality upon death.
+    /// <summary>
+    /// Disables the enemy's functionality upon death.
+    /// </summary>
     private void DisableEnemy()
     {
-        // Disable any movement scripts or nav mesh agents.
         var navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-        if (navAgent != null)
-        {
-            navAgent.enabled = false;
-        }
+        if (navAgent) navAgent.enabled = false;
 
-        // Disable collider to prevent interactions.
         var collider = GetComponent<Collider>();
-        if (collider != null)
-        {
-            collider.enabled = false;
-        }
-
-        // Stop other components like attacking or AI behaviors (if applicable).
+        if (collider) collider.enabled = false;
     }
 }
+
