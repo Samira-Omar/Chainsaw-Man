@@ -64,9 +64,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Handle behavior in Idle state: wait at the current waypoint for a certain amount of time.
-    /// </summary>
+
     private void HandleIdleState()
     {
         idleTimer += Time.deltaTime; // Increment the idle timer.
@@ -80,9 +80,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Handle movement while walking between waypoints.
-    /// </summary>
+
     private void HandleWalkState()
     {
         idleTimer = 0f; // Reset the idle timer upon starting to walk.
@@ -97,9 +97,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Handle behavior during the chase state.
-    /// </summary>
+
     private void HandleChaseState()
     {
         agent.speed = chaseSpeed; // Set agent speed to chasing speed.
@@ -116,9 +116,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Coroutine for checking player detection at intervals.
-    /// </summary>
+
     private IEnumerator PlayerDetectionCoroutine()
     {
         while (true)
@@ -128,9 +128,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+  
     /// Check if the player is within sight range and within field of view.
-    /// </summary>
+
     private void CheckForPlayerDetection()
     {
         Vector3 playerDirection = player.position - transform.position;
@@ -150,18 +150,18 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Move to the next waypoint in a loop.
-    /// </summary>
+
     private void NextWaypoint()
     {
         currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length; // Loop back to the first waypoint after the last one.
         SetDestinationToWaypoint();
     }
 
-    /// <summary>
+
     /// Set the agent's destination to the current waypoint's position and switch to Walk state.
-    /// </summary>
+
     private void SetDestinationToWaypoint()
     {
         if (waypoints.Length > 0)
@@ -172,9 +172,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+
     /// Play sound if it's not already playing to prevent sound spamming.
-    /// </summary>
+ 
     private void PlaySound(AudioClip soundClip)
     {
         if (!audioSource.isPlaying || audioSource.clip != soundClip)
@@ -184,9 +184,9 @@ public class EnemyController : MonoBehaviour
         }
     }
 
-    /// <summary>
+   
     /// Visualize the enemy's detection range or state in the editor.
-    /// </summary>
+
     private void OnDrawGizmos()
     {
         if (player != null)
